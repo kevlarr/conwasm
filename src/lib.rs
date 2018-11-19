@@ -1,8 +1,10 @@
 extern crate cfg_if;
+extern crate js_sys;
 extern crate wasm_bindgen;
 
 mod utils;
 
+use js_sys as JS;
 use std::fmt;
 use cfg_if::cfg_if;
 use wasm_bindgen::prelude::*;
@@ -38,7 +40,7 @@ impl Universe {
         let height = 48;
         let width = 96;
         let cells = (0..width * height)
-            .map(|i| if i % 2 == 0 || i % 7 == 0 { Cell::Alive } else { Cell::Dead })
+            .map(|_| if JS::Math::random() < 0.5 { Cell::Alive } else { Cell::Dead })
             .collect();
 
         Universe { cells, height, width }
