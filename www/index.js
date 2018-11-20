@@ -61,15 +61,29 @@ const ALIVE_COLOR = '#000000';
         ctx.stroke();
     };
 
+    let animationId = null;
 
-    const renderloop = () => {
+    const renderLoop = () => {
         universe.tick();
 
         drawGrid();
         drawCells();
 
-        requestAnimationFrame(renderloop);
+        animationId = requestAnimationFrame(renderLoop);
     };
 
-    requestAnimationFrame(renderloop);
+    const playPauseButton = document.getElementById('play-pause');
+    const play = () => {
+        playPauseButton.textContent = 'Pause';
+        renderLoop();
+    };
+    const pause = () => {
+        playPauseButton.textContent = 'Play';
+        cancelAnimationFrame(animationId);
+        animationId = null;
+    };
+
+    playPauseButton.addEventListener('click', (event) => {
+        animationId ? pause() : play();
+    });
 })();
