@@ -17,6 +17,24 @@ const ALIVE_COLOR = '#000000';
     canvas.height = (CELL_SIZE + 1) * universe.height() + 1;
     canvas.width = (CELL_SIZE + 1) * universe.width() + 1;
 
+    canvas.addEventListener('click', (event) => {
+        const bounding = canvas.getBoundingClientRect();
+
+        const scaleX = canvas.width / bounding.width;
+        const scaleY = canvas.height / bounding.height;
+
+        const canvasLeft = (event.clientX - bounding.left) * scaleX;
+        const canvasTop = (event.clientY - bounding.top) * scaleY;
+
+        const row = Math.min(Math.floor(canvasTop / (CELL_SIZE + 1)), height - 1);
+        const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), width - 1);
+
+        universe.toggle_cell(row, col);
+
+        //drawGrid();
+        drawCells();
+    });
+
     const ctx = canvas.getContext('2d');
 
     const drawGrid = () => {

@@ -6,7 +6,6 @@ mod utils;
 
 use js_sys as JS;
 use std::fmt;
-use cfg_if::cfg_if;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -15,6 +14,16 @@ use wasm_bindgen::prelude::*;
 pub enum Cell {
     Dead = 0,
     Alive = 1,
+}
+
+#[wasm_bindgen]
+impl Cell {
+    fn toggle(&mut self) {
+        *self = match *self {
+            Cell::Dead => Cell::Alive,
+            Cell::Alive => Cell::Dead,
+        };
+    }
 }
 
 #[wasm_bindgen]
@@ -69,6 +78,11 @@ impl Universe {
         }
 
         self.cells = next;
+    }
+
+    pub fn toggle_cell(&mut self, row: u32, col: u32) {
+        let i = self.index(row, col);
+        self.cells[i].toggle();
     }
 }
 
