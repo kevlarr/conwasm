@@ -6,68 +6,94 @@ const GRID_COLOR = '#cccccc';
 const DEAD_COLOR = '#ffffff';
 const ALIVE_COLOR = '#000000';
 
+class GameOfLife {
+    constructor() {
+        this.universe = Universe.new();
 
-(function main() {
-    const universe = Universe.new();
-    const height = universe.height();
-    const width = universe.width();
-    const getIndex = (row, col) => row * width + col;
+        this.canvas = document.getElementById('conwasm-canvas');
+        this.canvas.height = (CELL_SIZE + 1) * this.universe.height() + 1;
+        this.canvas.width = (CELL_SIZE + 1) * this.universe.width() + 1;
+        this.canvas.addEventListener('click', this.click.bind(this));
 
-    const canvas = document.getElementById('conwasm-canvas');
-    canvas.height = (CELL_SIZE + 1) * universe.height() + 1;
-    canvas.width = (CELL_SIZE + 1) * universe.width() + 1;
+        this.ctx = this.canvas.getContext('2d');
+    }
 
-    canvas.addEventListener('click', (event) => {
-        const bounding = canvas.getBoundingClientRect();
+    get height() {
+        return this.universe.height();
+    }
 
-        const scaleX = canvas.width / bounding.width;
-        const scaleY = canvas.height / bounding.height;
+    get width() {
+        return this.universe.width();
+    }
+
+    click(event) {
+        const bounding = this.canvas.getBoundingClientRect();
+
+        const scaleX = this.canvas.width / bounding.width;
+        const scaleY = this.canvas.height / bounding.height;
 
         const canvasLeft = (event.clientX - bounding.left) * scaleX;
         const canvasTop = (event.clientY - bounding.top) * scaleY;
 
-        const row = Math.min(Math.floor(canvasTop / (CELL_SIZE + 1)), height - 1);
-        const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), width - 1);
+        const row = Math.min(
+            Math.floor(canvasTop / (CELL_SIZE + 1)),
+            this.universe.height() - 1
+        );
+        const col = Math.min(
+            Math.floor(canvasLeft / (CELL_SIZE + 1)),
+            this.universe.width() - 1
+        );
 
-        universe.toggle_cell(row, col);
-
-        //drawGrid();
-        drawCells();
-    });
-
-    const ctx = canvas.getContext('2d');
-
-    const drawGrid = () => {
-        ctx.beginPath();
-        ctx.strokeStyle = GRID_COLOR;
-
-        for (let i = 0; i <= width; i++) {
-            const x = i * (CELL_SIZE + 1) + 1;
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, (CELL_SIZE + 1) * height + 1);
-        }
-
-        for (let j = 0; j <= height; j++) {
-            const y = j * (CELL_SIZE + 1) + 1;
-            ctx.moveTo(0, y);
-            ctx.lineTo((CELL_SIZE + 1) * width + 1, y);
-        }
-
-        ctx.stroke();
+        this.universe.toggle_cell(row, col);
+        this.render();
     }
 
-    const drawCells = () => {
-        const cellsPtr = universe.cells();
-        const cells = new Uint8Array(memory.buffer, cellsPtr, width * height);
+    getIndex(row, col) {
+        return row * this.width + col;
+    }
 
-        ctx.beginPath();
+    next() {
+        this.universe.tick();
+    }
 
-        for (let row = 0; row < height; row++) {
-            for (let col = 0; col < width; col++) {
-                const i = getIndex(row, col);
+    render() {
+        this.drawGrid();
+        this.drawCells();
+    }
 
-                ctx.fillStyle = cells[i] === Cell.Dead ? DEAD_COLOR : ALIVE_COLOR;
-                ctx.fillRect(
+    drawGrid() {
+        this.ctx.beginPath();
+        this.ctx.strokeStyle = GRID_COLOR;
+
+        for (let i = 0; i <= this.width; i++) {
+            const x = i * (CELL_SIZE + 1) + 1;
+
+            this.ctx.moveTo(x, 0);
+            this.ctx.lineTo(x, (CELL_SIZE + 1) * this.height + 1);
+        }
+
+        for (let j = 0; j <= this.height; j++) {
+            const y = j * (CELL_SIZE + 1) + 1;
+
+            this.ctx.moveTo(0, y);
+            this.ctx.lineTo((CELL_SIZE + 1) * this.width + 1, y);
+        }
+
+        this.ctx.stroke();
+    }
+
+    drawCells() {
+        const cellsPtr = this.universe.cells();
+        const cells = new Uint8Array(memory.buffer, cellsPtr, this.width * this.height);
+
+        this.ctx.beginPath();
+
+        for (let row = 0; row < this.height; row++) {
+            for (let col = 0; col < this.width; col++) {
+                const i = this.getIndex(row, col);
+
+                this.ctx.fillStyle = cells[i] === Cell.Dead ? DEAD_COLOR : ALIVE_COLOR;
+                this.ctx.fillRect(
                     col * (CELL_SIZE + 1) + 1,
                     row * (CELL_SIZE + 1) + 1,
                     CELL_SIZE,
@@ -76,16 +102,17 @@ const ALIVE_COLOR = '#000000';
             }
         }
 
-        ctx.stroke();
-    };
+        this.ctx.stroke();
+    }
+}
 
+(function main() {
+    const gameOfLife = new GameOfLife();
     let animationId = null;
 
     const renderLoop = () => {
-        universe.tick();
-
-        drawGrid();
-        drawCells();
+        gameOfLife.next();
+        gameOfLife.render();
 
         animationId = requestAnimationFrame(renderLoop);
     };
