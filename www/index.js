@@ -1,7 +1,7 @@
 import { Cell, Universe } from 'conwasm';
 import { memory } from 'conwasm/conwasm_bg';
 
-const CELL_SIZE = 10;
+const CELL_SIZE = 2;
 const GRID_COLOR = '#cccccc';
 const DEAD_COLOR = '#ffffff';
 const ALIVE_COLOR = '#000000';
