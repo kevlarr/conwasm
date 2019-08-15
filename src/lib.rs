@@ -35,9 +35,7 @@ pub struct Universe {
 
 #[wasm_bindgen]
 impl Universe {
-    pub fn new() -> Universe {
-        let height = 256;
-        let width = 512;
+    pub fn new(width: u32, height: u32) -> Universe {
         let cells = (0..width * height)
             .map(|_| if JS::Math::random() < 0.5 { Cell::Alive } else { Cell::Dead })
             .collect();

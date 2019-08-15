@@ -1,18 +1,18 @@
 import { Cell, Universe } from 'conwasm';
 import { memory } from 'conwasm/conwasm_bg';
 
-const CELL_SIZE = 2;
 const GRID_COLOR = '#cccccc';
 const DEAD_COLOR = '#ffffff';
 const ALIVE_COLOR = '#000000';
 
 class GameOfLife {
-    constructor() {
-        this.universe = Universe.new();
+    constructor(canvas, width, height, cellSize) {
+        this.canvas = canvas;
+        this.cellSize = cellSize;
+        this.universe = Universe.new(width, height);
 
-        this.canvas = document.getElementById('conwasm-canvas');
-        this.canvas.height = (CELL_SIZE + 1) * this.universe.height() + 1;
-        this.canvas.width = (CELL_SIZE + 1) * this.universe.width() + 1;
+        this.canvas.height = (this.cellSize + 1) * this.universe.height() + 1;
+        this.canvas.width = (this.cellSize + 1) * this.universe.width() + 1;
         this.canvas.addEventListener('click', this.click.bind(this));
 
         this.ctx = this.canvas.getContext('2d');
@@ -36,11 +36,11 @@ class GameOfLife {
         const canvasTop = (event.clientY - bounding.top) * scaleY;
 
         const row = Math.min(
-            Math.floor(canvasTop / (CELL_SIZE + 1)),
+            Math.floor(canvasTop / (this.cellSize + 1)),
             this.universe.height() - 1
         );
         const col = Math.min(
-            Math.floor(canvasLeft / (CELL_SIZE + 1)),
+            Math.floor(canvasLeft / (this.cellSize + 1)),
             this.universe.width() - 1
         );
 
@@ -66,17 +66,17 @@ class GameOfLife {
         this.ctx.strokeStyle = GRID_COLOR;
 
         for (let i = 0; i <= this.width; i++) {
-            const x = i * (CELL_SIZE + 1) + 1;
+            const x = i * (this.cellSize + 1) + 1;
 
             this.ctx.moveTo(x, 0);
-            this.ctx.lineTo(x, (CELL_SIZE + 1) * this.height + 1);
+            this.ctx.lineTo(x, (this.cellSize + 1) * this.height + 1);
         }
 
         for (let j = 0; j <= this.height; j++) {
-            const y = j * (CELL_SIZE + 1) + 1;
+            const y = j * (this.cellSize + 1) + 1;
 
             this.ctx.moveTo(0, y);
-            this.ctx.lineTo((CELL_SIZE + 1) * this.width + 1, y);
+            this.ctx.lineTo((this.cellSize + 1) * this.width + 1, y);
         }
 
         this.ctx.stroke();
@@ -94,10 +94,10 @@ class GameOfLife {
 
                 this.ctx.fillStyle = cells[i] === Cell.Dead ? DEAD_COLOR : ALIVE_COLOR;
                 this.ctx.fillRect(
-                    col * (CELL_SIZE + 1) + 1,
-                    row * (CELL_SIZE + 1) + 1,
-                    CELL_SIZE,
-                    CELL_SIZE
+                    col * (this.cellSize + 1) + 1,
+                    row * (this.cellSize + 1) + 1,
+                    this.cellSize,
+                    this.cellSize
                 );
             }
         }
@@ -107,28 +107,64 @@ class GameOfLife {
 }
 
 (function main() {
-    const gameOfLife = new GameOfLife();
+    const byId = document.getElementById.bind(document);
+
+    const els = {
+        canvas: byId('gameCanvas'),
+        widthInput: byId('gameWidth'),
+        heightInput: byId('gameHeight'),
+        cellSizeInput: byId('cellSize'),
+        togglePlaying: byId('togglePlaying'),
+    };
+
+    const newGame = () => {
+        const game = new GameOfLife(
+            els.canvas,
+            Number(els.widthInput.value),
+            Number(els.heightInput.value),
+            Number(els.cellSizeInput.value)
+        );
+
+        game.next();
+        game.render();
+
+        return game;
+    };
+
+    let gameOfLife = newGame();
     let animationId = null;
 
-    const renderLoop = () => {
+    const loop = () => {
         gameOfLife.next();
         gameOfLife.render();
 
-        animationId = requestAnimationFrame(renderLoop);
+        animationId = requestAnimationFrame(loop);
     };
 
-    const playPauseButton = document.getElementById('play-pause');
     const play = () => {
-        playPauseButton.textContent = 'Pause';
-        renderLoop();
+        els.togglePlaying.textContent = 'Pause';
+
+        loop();
     };
+
     const pause = () => {
-        playPauseButton.textContent = 'Play';
+        els.togglePlaying.textContent = 'Play';
+
         cancelAnimationFrame(animationId);
         animationId = null;
     };
 
-    playPauseButton.addEventListener('click', (event) => {
+    const reset = () => {
+        if (animationId) { pause(); }
+
+        gameOfLife = newGame();
+    };
+
+    els.togglePlaying.addEventListener('click', (_event) => {
         animationId ? pause() : play();
+    });
+
+    [els.widthInput, els.heightInput, els.cellSizeInput].forEach(input => {
+        input.addEventListener('change', reset);
     });
 })();
