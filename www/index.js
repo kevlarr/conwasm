@@ -1,9 +1,9 @@
 import { Cell, Universe } from 'conwasm';
 import { memory } from 'conwasm/conwasm_bg';
 
-const GRID_COLOR = '#cccccc';
-const DEAD_COLOR = '#ffffff';
-const ALIVE_COLOR = '#000000';
+const GRID_COLOR = '#333';
+const DEAD_COLOR = '#000';
+const ALIVE_COLOR = 'rgb(18, 129, 186)';
 
 class GameOfLife {
     constructor(canvas, width, height, cellSize) {
